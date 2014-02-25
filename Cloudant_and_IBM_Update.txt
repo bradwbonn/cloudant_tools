@@ -1,0 +1,28 @@
+From: Derek Schoettle <derek@cloudant.com>
+Subject: Cloudant and IBM Update
+Date: February 25, 2014 at 2:09:37 PM EST
+To: team@cloudant.com
+Reply-To: team@cloudant.com
+
+Hi Folks - 
+
+I wanted to let everyone know that we are looking to close the transaction with IBM this Friday.  At that time, we'll be able to share details with everyone about the transaction.  
+
+Here are some frequent questions that we have gotten and we wanted to share the answers with everyone prior to Friday: 
+
+* What happens to my vested options?  They will convert to cash (options x share price - withholdings) and are paid directly to you at close.
+* Will I lose my unvested options? No, they convert to IBM's shares in a logical fashion.  Details on the strike price for options are TBD.
+* Will all vested options pay out equally? Yes. It's a clean, ALL cash transaction.
+* Will my vesting clock reset?  No. 
+* What is the final price per share?  That won't be determined until Friday at which point in time we will share it with you.
+
+As I said yesterday, we are also working to schedule the ALL HANDS Meetings in Boston in March.  We are working to FINALIZE A DATE and as soon as we do we will let everyone know.  We hope to have this date selected as soon as we have found the best window on such short notice.  The goal for that week is to formally welcome everyone, provide details on HR, Benefits, IT, business planning, etc...and celebrate this exciting new chapter in Cloudant's history.
+
+I know everyone has a lot of questions and again if you have any PLEASE reach out to me or Melissa.  We appreciate your patience as we work to get everything wrapped up.
+
+Thanks!
+
+Derek
+
+
+
