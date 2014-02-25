@@ -6,8 +6,7 @@
 2. ~~Install git and create local repository~~
 3. ~~Create SSH keys~~
 4. ~~Familiarize myself with 'mou'~~
-3. ~~Create markdown file(s) for replication in repo
-~~
+3. ~~Create markdown file(s) for replication in repo~~
 4. Begin reviewing training materials from Mike Breslin
 
 ### Further to-do:
