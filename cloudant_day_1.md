@@ -11,7 +11,7 @@
 
 ### Further to-do:
 * Start learning Python
-* Set up virtualenv for package compartmentalization
+* ~~Set up virtualenv for package compartmentalization~~
 * once set up with Github org, clone `clou`
 * Log into Fogbugz and start reading through recent tickets
 * Review Runkeeper data model presentation
