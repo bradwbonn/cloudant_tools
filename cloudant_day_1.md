@@ -9,8 +9,15 @@
 3. ~~Create markdown file(s) for replication in repo~~
 4. Begin reviewing training materials from Mike Breslin
 
+# Cloudant Day 2
+### Continuing from yesterday:
+1. Review training materials from Mike Breslin
+2. Start doing CRUD against my test databases with curl
+3. Get added to Cloudant's GitHub org
+
 ### Further to-do:
 * Start learning Python
+* Start learning Javascript
 * ~~Set up virtualenv for package compartmentalization~~
 * once set up with Github org, clone `clou`
 * Log into Fogbugz and start reading through recent tickets
