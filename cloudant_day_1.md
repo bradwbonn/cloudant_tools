@@ -17,6 +17,7 @@
 
 ### Further to-do:
 * Start learning Python
+* Start learning node.js
 * Start learning Javascript
 * ~~Set up virtualenv for package compartmentalization~~
 * once set up with Github org, clone `clou`
