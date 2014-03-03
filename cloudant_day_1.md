@@ -7,7 +7,7 @@
 3. ~~Create SSH keys~~
 4. ~~Familiarize myself with 'mou'~~
 3. ~~Create markdown file(s) for replication in repo~~
-4. Begin reviewing training materials from Mike Breslin
+4. ~~Begin reviewing training materials from Mike Breslin~~
 
 # Cloudant Day 2
 ### Continuing from yesterday:
@@ -20,6 +20,13 @@
 * Start learning node.js
 * Start learning Javascript
 * ~~Set up virtualenv for package compartmentalization~~
-* once set up with Github org, clone `clou`
+* ~~once set up with Github org, clone `clou`~~
+* ~~clone `ops`~~
 * Log into Fogbugz and start reading through recent tickets
 * Review Runkeeper data model presentation
+
+## March 2014
+* Read NoSQL articles provided by Mike and Tom
+* Read NoSQL Distilled (at least a good portion, major points, etc)
+* IRC channel passwords
+
