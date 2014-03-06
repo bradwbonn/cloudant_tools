@@ -2,7 +2,8 @@
 
 import csv
 import json
-import sys,getopt
+import sys
+import getopt
 
 # This script imports a csv file and converts it into a JSON document file(s) that contains
 # an array of JSON documents, each corresponding to one row of the CSV file.
@@ -55,7 +56,7 @@ def main(argv):
         elif opt in ("-n"):
             rowsperfile = arg
             # Do not allow negative numbers or 1 doc per file
-            if (rowsperfile < 0 | rowsperfile == 1):
+            if (rowsperfile < 0 or rowsperfile == 1):
                 print 'Minimum docs per file is 2'
                 sys.exit(2)
     # Open input file
@@ -71,11 +72,11 @@ def main(argv):
         skipfirst = 0
         
     # If no output file was specified and we're not breaking up into separate files, use "file.json"
-    if (outputfile == '' & rowsperfile == 0):
+    if (outputfile == '' and rowsperfile == 0):
         outputfile = 'file.json'
         createsinglejsonfile(reader,outputfile,skipfirst)
     # If output filename was specified and we're not breaking up into separate files, use that filename
-    elif (outputfile != '' * rowsperfile == 0):
+    elif (outputfile != '' and rowsperfile == 0):
         createsinglejsonfile(reader,outputfile,skipfirst)
     # If the user wants separate files for each input, run multi-file function with row count
     elif (rowsperfile != 0):
@@ -93,7 +94,7 @@ def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
 
     for row in csvdict:
         # If this is the first iteration, and we want to skip the first row, go to the next loop
-        if (skipcheck == 0 & dontusefirstrow == 1):
+        if (skipcheck == 0 and dontusefirstrow == 1):
             skipcheck = 1
             next
         # If this isn't the first document to write, lead a comma
