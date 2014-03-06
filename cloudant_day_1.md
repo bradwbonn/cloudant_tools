@@ -29,4 +29,4 @@
 * Read NoSQL articles provided by Mike and Tom
 * Read NoSQL Distilled (at least a good portion, major points, etc)
 * IRC channel passwords
-
+* edX course on Python
