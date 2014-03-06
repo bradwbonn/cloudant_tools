@@ -83,6 +83,7 @@ def main(argv):
         createjsonfiles(reader,rowsperfile,skipfirst)
         
     csvfile.close()
+    print 'Fields used: ',reader.fieldnames
     
 def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
     jsonfile = open(outputfilename, 'w')
@@ -100,6 +101,7 @@ def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
         # If this isn't the first document to write, lead a comma
         if rowcount != 0:
             jsonfile.write(',')
+            rowcount = rowcount + 1
         else:
             rowcount = rowcount + 1
     
@@ -109,6 +111,7 @@ def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
     # Write the final closing bracket for the "docs" document
     jsonfile.write(']}')
     jsonfile.close()
+    print 'Rows converted: ',rowcount
     pass
 
     
