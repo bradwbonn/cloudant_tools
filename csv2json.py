@@ -60,6 +60,9 @@ def main(argv):
                 print 'Minimum docs per file is 2'
                 sys.exit(2)
     # Open input file
+    if len(inputfile) < 1:
+        print help
+        sys.exit(2)
     csvfile = open(inputfile, 'r')
     
     # If field names are pre-defined by arg, create dictreader using specified field names for columns
