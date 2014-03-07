@@ -68,7 +68,12 @@ def main(argv):
     if len(inputfile) < 1:
         print help
         sys.exit(2)
-    csvfile = open(inputfile, 'r')
+    
+    try:
+        csvfile = open(inputfile, 'r')
+    except IOError as e:
+        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        sys.exit(2)
     
     # If field names are pre-defined by arg, create dictreader using specified field names for columns
     # Otherwise, have dictreader use the first line as the field names for the columns. If user doesn't
@@ -95,7 +100,11 @@ def main(argv):
     print 'Fields used: ',reader.fieldnames
     
 def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
-    jsonfile = open(outputfilename, 'w')
+    try:
+        jsonfile = open(outputfilename, 'w')
+    except IOError as e:
+        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        sys.exit(2)
     # Output the beginning of the over-arching JSON doc that will contain an array of docs
     jsonfile.write('{ "docs":[')
 
@@ -143,7 +152,11 @@ def createjsonfiles(csvdict,filelength,dontusefirstrow):
         # If this is the first row for a sequence, open the new JSON doc, write the beginning,
         # then output the row and increase rowcount
         if (rowcount == 1):
-            jsonfile = open(currentfilename, 'w')
+            try:
+                jsonfile = open(currentfilename, 'w')
+            except IOError as e:
+                print "I/O error({0}): {1}".format(e.errno, e.strerror)
+                sys.exit(2)
             jsonfile.write('{ "docs":[')
             json.dump(row, jsonfile)
             rowcount = rowcount + 1
