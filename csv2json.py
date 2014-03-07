@@ -120,7 +120,7 @@ def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
     # Write the final closing bracket for the "docs" document
     jsonfile.write(']}')
     jsonfile.close()
-    print 'Rows converted: ',rowcount
+    print 'Total rows converted: ',rowcount
     pass
     
 def createjsonfiles(csvdict,filelength,dontusefirstrow):
@@ -132,6 +132,7 @@ def createjsonfiles(csvdict,filelength,dontusefirstrow):
     rowcount = 1
     skipcheck = 0
     filecount = 0
+    totalrows = 0
     
     for row in csvdict:
         currentfilename = 'file_%d.json' % filecount
@@ -146,12 +147,14 @@ def createjsonfiles(csvdict,filelength,dontusefirstrow):
             jsonfile.write('{ "docs":[')
             json.dump(row, jsonfile)
             rowcount = rowcount + 1
+            totalrows = totalrows + 1
         # If this is a row in the middle of a document, write a leading comma, then output
         # the row and increase rowcount
         elif ((rowcount > 1) and (int(rowcount) / int(filelength) != int(rowcount) / float(filelength))):
             jsonfile.write(',')
             rowcount = rowcount + 1
             json.dump(row, jsonfile)
+            totalrows = totalrows + 1
         # If this is the last row for a document, output the comma, row, then write the final
         # closing bracket, close the file, then reset rowcount to 1 and increment filecount
         elif ((rowcount > 1) and (int(rowcount) / int(filelength) == int(rowcount) / float(filelength))):
@@ -161,6 +164,7 @@ def createjsonfiles(csvdict,filelength,dontusefirstrow):
             jsonfile.close()
             rowcount = 1
             filecount = filecount + 1
+            totalrows = totalrows + 1
         else:
             print "That just don't add up! (row checking error)"
             sys.exit(2)
@@ -171,6 +175,7 @@ def createjsonfiles(csvdict,filelength,dontusefirstrow):
         jsonfile.write(']}')
         jsonfile.close()
         print 'Final file written: ' + currentfilename
+    print 'Total rows converted: ',totalrows
     pass
 
 if __name__ == "__main__":
