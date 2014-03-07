@@ -66,7 +66,8 @@ def main(argv):
     # Otherwise, have dictreader use the first line as the field names for the columns. If user doesn't
     # specify the field names, script will IGNORE the request to skip the first line (-s)  
     if (fieldnames != ''):
-        reader = csv.DictReader( csvfile, fieldnames)
+        # Convert field names string to an array separated by commas and use as field names for reader
+        reader = csv.DictReader( csvfile, fieldnames.split(','))
     else:
         reader = csv.DictReader( csvfile)
         skipfirst = 0
@@ -97,7 +98,7 @@ def createsinglejsonfile(csvdict,outputfilename,dontusefirstrow):
         # If this is the first iteration, and we want to skip the first row, go to the next loop
         if (skipcheck == 0 and dontusefirstrow == 1):
             skipcheck = 1
-            next
+            continue
         # If this isn't the first document to write, lead a comma
         if rowcount != 0:
             jsonfile.write(',')
