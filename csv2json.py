@@ -13,7 +13,7 @@
 #
 # The script accepts the following parameters:
 #  -i <csv file> (mandatory, CSV file to be read)
-#  -o <json file> (optional, omitting creates file(s) with name "file.json")
+#  -o <json file> (optional, file to write, omitting creates file(s) with name "file.json")
 #  -f <field names> (optional, if omitted, the first row of the CSV file will be considered
 #     the field names. Use single quoted string with commas for the names.)
 #  -s (optional, skips first row of the CSV file. Must be accompanied by -f)
