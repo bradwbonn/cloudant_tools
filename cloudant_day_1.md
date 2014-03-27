@@ -22,11 +22,11 @@
 * ~~Set up virtualenv for package compartmentalization~~
 * ~~once set up with Github org, clone `clou`~~
 * ~~clone `ops`~~
-* Log into Fogbugz and start reading through recent tickets
+* ~~Log into Fogbugz and start reading through recent tickets~~
 * Review Runkeeper data model presentation
 
 ## March 2014
 * Read NoSQL articles provided by Mike and Tom
 * Read NoSQL Distilled (at least a good portion, major points, etc)
-* IRC channel passwords
+* ~~IRC channel passwords~~
 * edX course on Python

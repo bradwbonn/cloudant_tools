@@ -61,7 +61,7 @@ def main(argv):
         elif opt in ("-n"):
             rowsperfile = arg
             # Do not allow negative numbers or 1 doc per file
-            if (rowsperfile < 0 or rowsperfile == 1):
+            if (rowsperfile <= 0 or rowsperfile == 1):
                 print 'Minimum docs per file is 2'
                 sys.exit(2)
     # Open input file
