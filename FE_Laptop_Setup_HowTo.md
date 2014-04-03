@@ -9,6 +9,7 @@
 * Install Mindnode
 * Install iTerm
 * Install XCode
+* Install node.js
 
 ### 2. Homebrew
 * install homebrew
@@ -25,10 +26,10 @@
 * Getting clou working is a collossal pain in the tuckas and has no consistent guides or how-to's, generally requiring manual intervention from the ops or dev team(s)
 
 ### 4. Browsers
-* Firefox
-* Chrome
-* Lastpass plug-in on all browsers
-* JSON and REST plug-ins
+* Install Firefox
+* Install Chrome
+* Install Lastpass plug-in on all browsers
+* Install JSON and REST plug-ins
 
 ### 5. Notes
 * Install Cisco VPN 
