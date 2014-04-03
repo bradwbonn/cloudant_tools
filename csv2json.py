@@ -59,7 +59,7 @@ def main(argv):
         elif opt in ("-s"):
             skipfirst = 1
         elif opt in ("-n"):
-            rowsperfile = arg
+            rowsperfile = int(arg)
             # Do not allow negative numbers or 1 doc per file
             if (rowsperfile <= 0 or rowsperfile == 1):
                 print 'Minimum docs per file is 2'
