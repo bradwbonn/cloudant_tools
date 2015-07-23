@@ -70,7 +70,7 @@ def main(argv):
         sys.exit(2)
     
     try:
-        csvfile = open(inputfile, 'r')
+        csvfile = open(inputfile, 'rU')
     except IOError as e:
         print "I/O error({0}): {1}".format(e.errno, e.strerror)
         sys.exit(2)
@@ -80,9 +80,9 @@ def main(argv):
     # specify the field names, script will IGNORE the request to skip the first line (-s)  
     if (fieldnames != ''):
         # Convert field names string to an array separated by commas and use as field names for reader
-        reader = csv.DictReader( csvfile, fieldnames.split(','))
+        reader = csv.DictReader( csvfile, fieldnames=fieldnames.split(','))
     else:
-        reader = csv.DictReader( csvfile)
+        reader = csv.DictReader( csvfile, quotechar='"', skipinitialspace=True)
         skipfirst = 0
         
     # If no output file was specified and we're not breaking up into separate files, use "file.json"
@@ -95,7 +95,6 @@ def main(argv):
     # If the user wants separate files for each input, run multi-file function with row count
     elif (rowsperfile != 0):
         createjsonfiles(reader,rowsperfile,skipfirst)
-        
     csvfile.close()
     print 'Fields used: ',reader.fieldnames
     
