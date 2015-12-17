@@ -1,5 +1,3 @@
-# cloudant_tools
-Some useful items I use at Cloudant
 # Some helpful Cloudant tools I'm writing
 ### cluster_disk.py
 * Gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
