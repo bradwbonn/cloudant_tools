@@ -105,7 +105,7 @@ def print_results(cluster):
             plusornot = "-"
             percent_change = abs(percent_change)
             change = abs(change)
-        print '{0:5}- GB used:{1:7} ({2:4}%)  Change:{3}{4:5}MB ({5}{6:4}% in {7:1}min)'.format(key,gb_used,percent_full,plusornot,change,plusornot,percent_change,timediff)
+        print '{0:5}- Used:{1:7}GB ({2:4}%)  Change:{3}{4:5}MB ({5}{6:4}% in {7:1}min)'.format(key,gb_used,percent_full,plusornot,change,plusornot,percent_change,timediff)
     total_change = total_gb_used - total_gb_previous
     total_percent_change = round(((total_gb_used - total_gb_previous) / total_gb_previous) * 100, 1)
     total_timediff = numpy.mean(timediffs)
