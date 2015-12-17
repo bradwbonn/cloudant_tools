@@ -4,7 +4,6 @@
 * Uses the monitoring API endpoint for a Cloudant cluster.  Requires admin rights
 * `python cluster_disk.py -u <cloudant user> -c <cloudant cluster>`
 * Uses auth string stored in environment variable
-* Requires `import requests`
  
 
 ### csv2json.py
