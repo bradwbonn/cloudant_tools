@@ -108,7 +108,7 @@ def print_results(cluster):
         print '{0:5}- Used:{1:7}GB ({2:4}%)  Change:{3}{4:5}MB ({5}{6:4}% in {7:1}min)'.format(key,gb_used,percent_full,plusornot,change,plusornot,percent_change,timediff)
     total_change = total_gb_used - total_gb_previous
     total_percent_change = round(((total_gb_used - total_gb_previous) / total_gb_previous) * 100, 1)
-    total_timediff = numpy.mean(timediffs)
+    total_timediff = int(round(numpy.mean(timediffs)))
     total_percent_full = round((total_gb_used / (total_gb_free + total_gb_used)) * 100, 1)
     if total_change > 0:
         total_plusornot = "+"
@@ -116,7 +116,9 @@ def print_results(cluster):
         total_plusornot = "-"
         total_percent_change = abs(total_percent_change)
         total_change = abs(total_change)
-    print "Totals: {0}GB ({1}%) used. ({2}{3}GB {4}% in {5}min)".format(total_gb_used,total_percent_full,total_plusornot,total_change,total_percent_change,total_timediff)
+    print ""
+    #print "TOTALS: Used:{0}GB ({1}%)  Change:({2}{3}GB {4}% in {5}min)".format(total_gb_used,total_percent_full,total_plusornot,total_change,total_percent_change,total_timediff)
+    print 'TOTAL: Used:{0:7}GB ({1:4}%)  Change:{2}{3:5}GB ({4}{5:4}% in {6:1}min)'.format(total_gb_used,total_percent_full,total_plusornot,total_change,total_plusornot,total_percent_change,total_timediff)
     print ""
 
 if __name__ == "__main__":
