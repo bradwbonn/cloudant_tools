@@ -99,13 +99,17 @@ def print_results(cluster):
         total_gb_free = total_gb_free + round(((results[key][0] / 1024) / 1024) / 1024, 0)
         timediff = (results[key][4] / 60)
         timediffs.append(timediff)
+        if percent_full > 90:
+            tag = '*'
+        else:
+            tag = ' '
         if (percent_change > 0):
             plusornot = "+"
         else:
             plusornot = "-"
             percent_change = abs(percent_change)
             change = abs(change)
-        print '{0:5}- Used:{1:7}GB ({2:4}%)  Change:{3}{4:5}MB ({5}{6:4}% in {7:1}min)'.format(key,gb_used,percent_full,plusornot,change,plusornot,percent_change,timediff)
+        print '{0:5}- Used:{1:7}GB ({2:4}%){3} Change:{4}{5:5}MB ({6}{7:4}% in {8:1}min)'.format(key,gb_used,percent_full,tag,plusornot,change,plusornot,percent_change,timediff)
     total_change = total_gb_used - total_gb_previous
     total_percent_change = round(((total_gb_used - total_gb_previous) / total_gb_previous) * 100, 1)
     total_timediff = int(round(numpy.mean(timediffs)))
