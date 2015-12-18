@@ -59,20 +59,24 @@ def get_disk_state_of_node(node, account, cluster):
         myurl,
         headers = my_header
     )
+    if r.status_code not in (200,201,202):
+        print r.status_code
+        sys.exit("Cannot query node stats: " + node)
     disk_used = r.json()
     myurl = 'https://' + account + '.cloudant.com/_api/v2/monitoring/node_disk_free_srv?cluster=' + cluster + '&format=json&node=' + node
     r = requests.get(
         myurl,
         headers = my_header
     )
+    if r.status_code not in (200,201,202):
+        print r.status_code
+        sys.exit("Cannot query node stats: " + node)
     disk_free = r.json()
     #bytes_used_datapoints = disk_used['target_responses']['datapoints']
     #bytes_free_datapoints = disk_free['target_responses']['datapoints']
     
     curr_used_key = len(disk_used['target_responses'][0]['datapoints']) - 2
     curr_free_key = len(disk_free['target_responses'][0]['datapoints']) - 2
-    prev_used_key = curr_used_key - 1
-    prev_free_key = curr_free_key - 1
 
     current_bytes_free = float(disk_free['target_responses'][0]['datapoints'][curr_free_key][0])
     previous_bytes_free = float(disk_free['target_responses'][0]['datapoints'][0][0])
@@ -105,6 +109,8 @@ def print_results(cluster):
             tag = ' '
         if (percent_change > 0):
             plusornot = "+"
+        elif (percent_change == 0):
+            plusornot = ' '
         else:
             plusornot = "-"
             percent_change = abs(percent_change)
