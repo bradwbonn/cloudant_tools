@@ -107,9 +107,9 @@ def print_results(cluster):
             tag = '*'
         else:
             tag = ' '
-        if (percent_change > 0):
+        if (change > 0):
             plusornot = "+"
-        elif (percent_change == 0):
+        elif (change == 0):
             plusornot = ' '
         else:
             plusornot = "-"
