@@ -3,7 +3,7 @@
 * Gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
 * Uses the monitoring API endpoint for a Cloudant cluster.  Requires admin rights
 * `python cluster_disk.py -u <cloudant user> -c <cloudant cluster>`
-* Uses auth string stored in environment variable
+* Uses auth string stored in environment variable `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'`
  
 
 ### csv2json.py
