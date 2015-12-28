@@ -90,7 +90,7 @@ def print_shard_map(nodes, shards, shardtable):
     # Make an empty list for each node so the node will still print 
     for node in nodes:
         distribution[node] = []
-    print " ---"
+    print ""
     print " Shard distribution balance"
     print " Node | Shards | Count"
     for shardrange,nodes in shards.iteritems():
