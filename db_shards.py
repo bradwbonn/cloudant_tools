@@ -78,36 +78,37 @@ def get_node_list():
     return(nodes)
 
 def strip_nodename(fullname):
-    garbage1 = 'dbcore@'
+    garbage1 = 'dbcore@db'
     garbage2 = '.' + config['cluster'] + '.cloudant.net'
     # regex out the node name
     without_tail = re.sub(garbage2,'',fullname)
     nodename = re.sub(garbage1,'',without_tail)
-    return (nodename)
+    return (int(nodename))
 
 def print_shard_map(nodes, shards, shardtable):
     distribution = dict()
     # Make an empty list for each node so the node will still print 
     for node in nodes:
         distribution[node] = []
-    print " Shard distribution balance:"
+    print " ---"
+    print " Shard distribution balance"
+    print " Node | Shards | Count"
     for shardrange,nodes in shards.iteritems():
         for longnode in nodes:
             node = strip_nodename(longnode)
             distribution[node].append(shardtable[shardrange])
     for node in sorted(distribution):
         if (len(distribution[node]) > 0):
-            shardlist = ''.join(distribution[node]) 
-            print " {0}: {1} ({2})".format(node,shardlist,len(shardlist))
+            shardlist = ''.join(sorted(distribution[node])) 
+            print " {0:3d}: {1:10} ({2})".format(node,shardlist,len(shardlist))
         else:
-            print " {0}: < None >".format(node)
+            print " {0:3d}:  <*None*>".format(node)
     print ""
 
 def print_shard_key(shards):
     print " Shard range:        Code:"
-    #######e0000000-ffffffff
     for shardrange in sorted(shards):
-        print " {0}: {1}".format(shardrange,shards[shardrange])
+        print " {0}:  {1}".format(shardrange,shards[shardrange])
     print " ---"
     
 def make_shard_table(shards):
