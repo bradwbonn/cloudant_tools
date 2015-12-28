@@ -11,6 +11,7 @@
 * `python db_shards.py -u <cloudant user> -c <cloudant cluster> -d <database> [-k]`
 * optional `-k` will display which shard ranges correspond to which codes
 * Not including `-k` automatically prints the shard distribution map and count of shards on each node for the database in question.
+* Also uses auth string from environment variable like cluster_disk.py
 
 ### csv2json.py
 * Script that converts a CSV file into one (or more) JSON files
