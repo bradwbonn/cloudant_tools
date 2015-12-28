@@ -54,6 +54,7 @@ def get_node_list(cluster):
     return(nodes)
     
 def get_disk_state_of_node(node, account, cluster):
+    #time.sleep(1)
     myurl = 'https://' + account + '.cloudant.com/_api/v2/monitoring/node_disk_use_srv?cluster=' + cluster + '&format=json&node=' + node
     r = requests.get(
         myurl,
