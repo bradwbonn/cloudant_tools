@@ -24,6 +24,13 @@
     * `-x` Scans database for total # of conflicts
     * `-v` (Be verbose)
   
+## userdbs.py
+* Lists all databases in the specified Cloudant account and their basic statistics in an easy-to-read format
+* `userdbs.py -u <cloudant account>`
+* Uses auth strings from environment variables
+  * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` or
+  * `CLOUDANT_AUTH='Basic: <authstring>'`
+
 ## cluster_disk.py
 * Admin tool that gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
 * Requires cluster admin rights
