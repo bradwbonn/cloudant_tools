@@ -55,13 +55,11 @@ config = dict(
 # Main
 def main(argv):
     # Default to only printing summary info
-    print_legend = False
     print_shards = False
     print_conflicts = False
     print_indexes = False
-
     try:
-        opts, args = getopt.getopt(argv,"u:d:skixv")
+        opts, args = getopt.getopt(argv,"u:d:sixv")
     except getopt.GetoptError:
         print config['helpstring']
         sys.exit(2)
@@ -73,18 +71,12 @@ def main(argv):
             config['dbname'] = arg
         elif opt in ("-s"):
             print_shards = True
-        elif opt in ("-k"):
-            print_legend = True
         elif opt in ("-x"):
             print_conflicts = True
         elif opt in ("-i"):
             print_indexes = True
         elif opt in ("-v"):
             config['verbose'] = True
-    
-    # Fat-fingering check
-    if (print_legend == True and config['cluster'] == ''):
-        sys.exit(config['helpstring'])
     
     # Set authentication up        
     adminauthstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
@@ -111,11 +103,8 @@ def main(argv):
     # Get and print shard details
     if (print_shards):
         nodes = get_node_list()
-        shardtable = make_shard_table(config['shards'])
         print " Distribution of shards for database "+ config['dbname'] +" on cluster: " + config['cluster']
-        if (print_legend): # print shard legend if user-requested
-            print_shard_key(shardtable)
-        print_shard_map(nodes, config['shards'], shardtable)
+        print_shard_map(nodes, config['shards'])
 
 def get_conflicts():
     est_time = config['doc_count'] * config['time_estimate_ratio']
@@ -398,44 +387,44 @@ def strip_nodename(fullname):
     nodename = re.sub(garbage1,'',without_tail)
     return (int(nodename))
 
-def print_shard_map(nodes, shards, shardtable):
+def print_shard_map(nodes, shards):
     distribution = dict()
+    lines_to_print = []
+    width = 6
     # Make an empty list for each node so the node will still print 
     for node in nodes:
         distribution[node] = []
-    print " Shard distribution balance"
-    print " Node | Shards | Count"
+   
+    # choose number of characters to show based on shard count
+    if len(shards) < 16:
+        trim = 1
+    elif len(shards) < 256:
+        trim = 2
+    else:
+        trim = 3
+        
+    # Populate distribution of shards on each 
     for shardrange,nodes in shards.iteritems():
         for longnode in nodes:
             node = strip_nodename(longnode)
-            distribution[node].append(shardtable[shardrange])
+            distribution[node].append(shardrange[:trim])
     for node in sorted(distribution):
-        if (len(distribution[node]) > 0):
-            shardlist = ''.join(sorted(distribution[node])) 
-            print " {0:3d}: {1:10} ({2})".format(node,shardlist,len(shardlist))
-        else:
-            print " {0:3d}:  <*None*>".format(node)
-    print ""
-
-def print_shard_key(shards):
-    print " Shard range:        Code:"
-    for shardrange in sorted(shards):
-        print " {0}:  {1}".format(shardrange,shards[shardrange])
-    print " ---"
+        shardlist = ','.join(sorted(distribution[node]))
+        lines_to_print.append([node, shardlist, len(distribution[node])])
+        if width < len(shardlist):
+            width = len(shardlist)
     
-def make_shard_table(shards):
-    alphacodes = list(string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation)
-    code = 0
-    resulttable = dict()
-    for shardrange in sorted(shards):
-        resulttable[shardrange] = alphacodes[code]
-        code = code + 1
-        if code >= len(alphacodes):
-            sys.exit("Oops, Q > {0}.".format(len(alphacodes)))
-        elif code == 1:
-            resulttable['nvalue'] = len(shards[shardrange])
-    return (resulttable)
-    
+    # Set format string up based on max shard column width
+    formatstring = "|{0:>5} |{1:^6}|{2:<"+ str(width) + "}|"
+    headerstring = re.sub('<','^',formatstring)
+    # print
+    print "_" * (width + 16)
+    print headerstring.format('Node','Shards','Ranges')
+    print "-" * (width + 16)
+    for line in lines_to_print:
+        print formatstring.format(line[0],line[2],line[1])
+    print "-" * (width + 16)
+       
 def pretty_time(seconds):
     seconds = float(seconds)
     if seconds >= 3600:

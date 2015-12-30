@@ -13,13 +13,12 @@
 * Uses auth strings from environment variables
   * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` (only needed for shard details)
   * `CLOUDANT_AUTH='Basic: <authstring>'`
-* How to use: `dbinfo.py -u <user> -d <database> [-s [-k]] [-i] [-x] [-v]`
+* How to use: `dbinfo.py -u <user> -d <database> [-s] [-i] [-x] [-v]`
   * Always Mandatory Parameters:
     * `-u <Cloudant username>`
     * `-d <Cloudant database>`
   * Optional parameters:
     * `-s` Outputs a map of shard distributions on cluster nodes 
-    * `-k` Includes a legend of shard distribution ranges (requires -s)
     * `-i` Prints a list of indexes and their associated sizes:
     * `-x` Scans database for total # of conflicts
     * `-v` (Be verbose)
