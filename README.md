@@ -21,7 +21,7 @@
     * `-s` Outputs a map of shard distributions on cluster nodes 
     * `-i` Prints a list of indexes and their associated sizes:
     * `-x` Scans database for total # of conflicts
-    * `-v` (Be verbose)
+    * `-v` Verbose output. For example, adds view names under each design document listed with `-i`
   
 ## userdbs.py
 * Lists all databases in the specified Cloudant account and their basic statistics in an easy-to-read format
