@@ -68,7 +68,8 @@ def get_disk_state_of_node(node, account, cluster):
     if r.status_code not in (200,201,202):
         print r.status_code
         sys.exit("Cannot query node stats: " + node)
-    disk_used = r.json()
+    raw_json = r.json()
+    disk_used = raw_json['target_responses'][0]['datapoints']
     myurl = urlformat.format(
         account,
         'free',
@@ -82,19 +83,42 @@ def get_disk_state_of_node(node, account, cluster):
     if r.status_code not in (200,201,202):
         print r.status_code
         sys.exit("Cannot query node stats: " + node)
-    disk_free = r.json()
-    #bytes_used_datapoints = disk_used['target_responses']['datapoints']
-    #bytes_free_datapoints = disk_free['target_responses']['datapoints']
+    raw_json = r.json()
+    disk_free = raw_json['target_responses'][0]['datapoints']
     
-    curr_used_key = len(disk_used['target_responses'][0]['datapoints']) - 2
-    curr_free_key = len(disk_free['target_responses'][0]['datapoints']) - 2
+    # Find earlist and latest valid data points in each set of results
+    current_free = get_last_valid(disk_free)
+    current_used = get_last_valid(disk_used)
+    previous_free = get_first_valid(disk_free)
+    previous_used = get_first_valid(disk_used)
 
-    current_bytes_free = float(disk_free['target_responses'][0]['datapoints'][curr_free_key][0])
-    previous_bytes_free = float(disk_free['target_responses'][0]['datapoints'][0][0])
-    current_bytes_used = float(disk_used['target_responses'][0]['datapoints'][curr_used_key][0])
-    previous_bytes_used = float(disk_used['target_responses'][0]['datapoints'][0][0])
-    timediff = int(disk_free['target_responses'][0]['datapoints'][curr_free_key][1] - disk_free['target_responses'][0]['datapoints'][0][1])
-    results[node] = [current_bytes_free,current_bytes_used,previous_bytes_free,previous_bytes_used,timediff]
+    results[node] = [
+        current_free[0],
+        current_used[0],
+        previous_free[0],
+        previous_used[0],
+        int(current_free[1] - previous_free[1])
+    ]
+
+def get_last_valid(results):
+    valid = []
+    last = len(results) - 1
+    for i in range(last,-1,-1):
+        if isinstance(results[i][0],float):
+            valid = [results[i][0], results[i][1]]
+            return valid
+        else:
+            pass
+        
+def get_first_valid(results):
+    valid = []
+    last = len(results) - 1
+    for i in range(0,last):
+        if (isinstance(results[i][0],float)):
+            valid = [results[i][0], results[i][1]]
+            return valid
+        else:
+            pass
 
 def print_results(cluster):
     print ""
