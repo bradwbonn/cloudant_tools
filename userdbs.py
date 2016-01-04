@@ -12,20 +12,9 @@ config = dict(
 )
 
 def main(argv):
-    width = 107
-    headerline = "|{0:^40}|{1:^4}|{2:^3}|{3:^10} |{4:^10} |{5:^14} |{6:^14} |"
+
     locale.setlocale(locale.LC_ALL, 'en_US')
-    print "_" * width
-    print headerline.format(
-            'Database',
-            'Q',
-            'N',
-            'Active',
-            'Disk',
-            'Docs',
-            'Deleted'
-        )
-    print "-" * width
+
     try:
         opts, args = getopt.getopt(argv,"u:")
     except getopt.GetoptError:
@@ -43,13 +32,34 @@ def main(argv):
         sys.exit("ERROR: Required environment variables not set")
     config['my_header'] = {'Content-Type': 'application/json', 'Authorization': authstring}
     dbs = get_all_dbs(account)
+    
+    # Figure out the database name column width dynamically
+    dblen = 10
+    for db in dbs:
+        if len(db) > dblen:
+            dblen = len(db)
+    width = (107-40) + dblen
+    
+    headerline = "|{0:^" + str(dblen) + "}|{1:^4}|{2:^3}|{3:^10} |{4:^10} |{5:^14} |{6:^14} |"
+    print "_" * width
+    print headerline.format(
+            'Database',
+            'Q',
+            'N',
+            'Active',
+            'Disk',
+            'Docs',
+            'Deleted'
+        )
+    print "-" * width
+    
     for database in dbs:
-        print_summary(account, database)
+        print_summary(account, database, dblen)
     print "-" * width
 
-def print_summary(account, db):
+def print_summary(account, db, dblen):
     myurl = 'https://{0}.cloudant.com/{1}'.format(account,db) 
-    summaryline = "|{0:40}|{1:^4}|{2:^3}|{3:>10} |{4:>10} |{5:>14} |{6:>14} |"
+    summaryline = "|{0:" + str(dblen) + "}|{1:^4}|{2:^3}|{3:>10} |{4:>10} |{5:>14} |{6:>14} |"
     r = requests.get(
         myurl,
         headers = config['my_header']
