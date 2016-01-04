@@ -9,11 +9,14 @@ import sys
 import getopt
 import numpy
 import os
+from multiprocessing import Pool
 
 authstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
 my_header = {'Content-Type': 'application/json', 'Authorization': authstring}
-account = ''
-cluster = ''
+config = dict(
+    account = '',
+    cluster = ''
+)
 results = dict()
 
 # Main
@@ -27,24 +30,38 @@ def main(argv):
         
     for opt, arg in opts:
         if opt == '-u':
-            account = arg
+            config['account'] = arg
         elif opt in ("-c"):
-            cluster = arg
-    nodes = get_node_list(cluster)
-    for node in nodes:
-        get_disk_state_of_node(node, account, cluster)
-    print_results(cluster)
+            config['cluster'] = arg
+            
+    nodes = get_node_list()
+    
+    p = Pool()
+    results_array = p.map(get_disk_state_of_node, nodes)
+    #for node in nodes:
+    #    get_disk_state_of_node(node, account, cluster)
+    
+    for node_data in results_array:
+        results[node_data[0]] = [
+            node_data[1],
+            node_data[2],
+            node_data[3],
+            node_data[4],
+            node_data[5]
+        ]
+        
+    print_results()
 
-def get_node_list(cluster):
+def get_node_list():
     nodes = []
-    myurl = 'https://' + cluster + '.cloudant.com/_membership'
+    myurl = 'https://' + config['cluster'] + '.cloudant.com/_membership'
     r = requests.get(
         myurl,
         headers = my_header
     )
     json_response = r.json()
     garbage1 = 'dbcore@db'
-    garbage2 = '.' + cluster + '.cloudant.net'
+    garbage2 = '.' + config['cluster'] + '.cloudant.net'
     for nodestring in json_response['cluster_nodes']:
         # regex out the node name
         without_tail = re.sub(garbage2,'',nodestring)
@@ -53,12 +70,12 @@ def get_node_list(cluster):
         nodes.append(int(nodename))
     return(nodes)
     
-def get_disk_state_of_node(node, account, cluster):
+def get_disk_state_of_node(node):
     urlformat = 'https://{0}.cloudant.com/_api/v2/monitoring/node_disk_{1}_srv?cluster={2}&format=json&node=db{3}'
     myurl = urlformat.format(
-        account,
+        config['account'],
         'use',
-        cluster,
+        config['cluster'],
         node
     )
     r = requests.get(
@@ -71,11 +88,12 @@ def get_disk_state_of_node(node, account, cluster):
     raw_json = r.json()
     disk_used = raw_json['target_responses'][0]['datapoints']
     myurl = urlformat.format(
-        account,
+        config['account'],
         'free',
-        cluster,
+        config['cluster'],
         node
     )
+
     r = requests.get(
         myurl,
         headers = my_header
@@ -92,13 +110,24 @@ def get_disk_state_of_node(node, account, cluster):
     previous_free = get_first_valid(disk_free)
     previous_used = get_first_valid(disk_used)
 
-    results[node] = [
+    node_data = [
+        node,
         current_free[0],
         current_used[0],
         previous_free[0],
         previous_used[0],
         int(current_free[1] - previous_free[1])
     ]
+
+    return node_data
+
+    #results[node] = [
+    #    current_free[0],
+    #    current_used[0],
+    #    previous_free[0],
+    #    previous_used[0],
+    #    int(current_free[1] - previous_free[1])
+    #]
 
 def get_last_valid(results):
     valid = []
@@ -120,9 +149,9 @@ def get_first_valid(results):
         else:
             pass
 
-def print_results(cluster):
+def print_results():
     print ""
-    print "Disk usage on the "+ str(len(results)) +" nodes of cluster: " + cluster
+    print "Disk usage on the "+ str(len(results)) +" nodes of cluster: " + config['cluster']
     total_percent_change = 0
     total_disk_used = 0
     total_disk_free = 0
@@ -151,7 +180,7 @@ def print_results(cluster):
             plusornot = "-"
             percent_change = abs(percent_change)
             change = abs(change)
-        print 'db{0:<3}:{1:>9} ({2:4}%){3} Change:{4}{5:>9} ({6}{7:4}% in {8:1}min)'.format(
+        print 'db{0:<3}:{1:>10} ({2:4}%){3} Change:{4}{5:>10} ({6}{7:4}% in {8:1}min)'.format(
             key,
             data_size_pretty(disk_used),
             percent_full,
@@ -168,12 +197,14 @@ def print_results(cluster):
     total_percent_full = round((total_disk_used / (total_disk_free + total_disk_used)) * 100, 1)
     if total_change > 0:
         total_plusornot = "+"
-    else:
+    elif total_change < 0:
         total_plusornot = "-"
         total_percent_change = abs(total_percent_change)
         total_change = abs(total_change)
+    else:
+        plusornot = ' '
     print ""
-    print 'TOTAL:{0:>9} ({1:4}%)  Change:{2}{3:>9} ({4}{5:4}% in {6:1}min)'.format(
+    print 'TOTAL:{0:>10} ({1:4}%)  Change:{2}{3:>10} ({4}{5:4}% in {6:1}min)'.format(
         data_size_pretty(total_disk_used),
         total_percent_full,
         total_plusornot,
