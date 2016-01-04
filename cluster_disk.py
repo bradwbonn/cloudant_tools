@@ -121,30 +121,22 @@ def get_disk_state_of_node(node):
 
     return node_data
 
-    #results[node] = [
-    #    current_free[0],
-    #    current_used[0],
-    #    previous_free[0],
-    #    previous_used[0],
-    #    int(current_free[1] - previous_free[1])
-    #]
-
-def get_last_valid(results):
+def get_last_valid(api_response):
     valid = []
-    last = len(results) - 1
+    last = len(api_response) - 1
     for i in range(last,-1,-1):
-        if isinstance(results[i][0],float):
-            valid = [results[i][0], results[i][1]]
+        if isinstance(api_response[i][0],float):
+            valid = [api_response[i][0], api_response[i][1]]
             return valid
         else:
             pass
         
-def get_first_valid(results):
+def get_first_valid(api_response):
     valid = []
-    last = len(results) - 1
+    last = len(api_response) - 1
     for i in range(0,last):
-        if (isinstance(results[i][0],float)):
-            valid = [results[i][0], results[i][1]]
+        if (isinstance(api_response[i][0],float)):
+            valid = [api_response[i][0], api_response[i][1]]
             return valid
         else:
             pass
