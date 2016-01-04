@@ -17,7 +17,6 @@ config = dict(
 )
 
 def main(argv):
-
     locale.setlocale(locale.LC_ALL, 'en_US')
 
     try:
@@ -40,18 +39,18 @@ def main(argv):
     # Get list of databases for the account
     dbs = get_all_dbs()
     
-    # Figure out the database name column width dynamically
+    # Figure out the print format column width dynamically
     for db in dbs:
         if len(db) > config['dblen']:
             config['dblen'] = len(db)
-    config['width'] = (107-40) + config['dblen']
+    config['width'] = config['width'] + config['dblen']
     
     print_headerline()
     
     # Spawn a thread for each CPU
     # Each thread pulls and prints the stats of its passed database
     p = Pool()
-    results_array = p.map(print_summary, dbs)
+    results_array = p.map(get_summary, dbs)
 
     for result in results_array:
         config['results'][result['db']] = dict(
@@ -94,7 +93,7 @@ def print_db_details():
             config['results'][database]['del_doc_count']
         )
 
-def print_summary(db):
+def get_summary(db):
     myurl = 'https://{0}.cloudant.com/{1}'.format(config['account'],db)
     r = requests.get(
         myurl,
