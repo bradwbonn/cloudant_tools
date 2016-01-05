@@ -13,7 +13,6 @@ import time
 config = dict(
     my_header = dict(),
     account = '',
-    results = dict(),
     maxdbs = 40,
     summary_only = False,
     force_list = False,  
@@ -48,14 +47,21 @@ def main(argv):
     config['my_header'] = {'Content-Type': 'application/json', 'Authorization': authstring}
     
     # Get list of databases for the account
-    # dbs = get_all_dbs()
     myurl = 'https://{0}.cloudant.com/_all_dbs'.format(config['account'])
     dbs = http_request(myurl)
     config['dbcount'] = len(dbs)
     
-    # If the total number of databases is greater than 40, print a summary unless user forces
-    if (config['dbcount'] > config['maxdbs']) and not config['force_list']:
+    # If the total number of databases is greater than 40 and user forces details
+    if (config['dbcount'] > config['maxdbs']) and config['force_list']:
+        give_estimate(dbs,True)
+        detail_table(dbs)
+        
+    # If dbcount > 40 and user doesn't force, build and print a summary    
+    elif (config['dbcount'] > config['maxdbs']) and not config['force_list']:
+        give_estimate(dbs,False)
         summary(dbs)
+        
+    # Otherwise, default to printing detail table    
     else:
         detail_table(dbs)
 
@@ -122,54 +128,64 @@ def detail_table(dbs):
     
     print "-" * width
 
-def summary(dbs):
-    totals = np.array([0,0,0,0])
-    print " There are {0} databases in the account.".format(count_pretty(config['dbcount']))
-    print " Gathering stats to print a summary instead."
-    print " You can force full details with -f. Recommend piping to a file."
-    
-    # Open a multi-process pool with CPU count processes
+def give_estimate(dbs, detail):
     p = Pool()
-    
-    # Estimate time required
+    # Sample set is the first 'maxdbs' of databases
     sub_array = dbs[0:config['maxdbs']]
+    
     start_time = time.time()
-    discard = p.map(get_basic,sub_array)
+    if detail:
+        discard = p.map(get_details,sub_array)    
+    else:
+        discard = p.map(get_basic,sub_array)
     end_time = time.time()
     
+    # Cleanup
     del discard
-    est_time = pretty_time((end_time - start_time) * (config['dbcount'] / config['maxdbs']))
-    print " Estimated completion time: {0}\n".format(est_time)
+    del p
     
-    # Collect details when ready
-    ready = raw_input(" Continue? (Y/n) ")
+    est_time = pretty_time((end_time - start_time) * (config['dbcount'] / config['maxdbs']))
+    
+    # Print a time estimate for details, proceed when ready
+    print " There are {0} databases in the account.".format(count_pretty(config['dbcount']))
+    print " Estimated completion time: {0}\n".format(est_time)
+    ready = raw_input(" Are you sure? (Y/n) ")
     if ready in ('n','N'):
         sys.exit(" Aborting.")
+
+
+def summary(dbs):
+    totals = np.array([0,0,0,0])
+    totalsline = "|{0:20}|{1:>18} |"
+    width = len(totalsline.format('',''))
+    # Open a multi-process pool with CPU count processes
+    p = Pool()
     
     start_time = time.time()
     totals_array = p.map(get_basic,dbs)
     end_time = time.time()
+    
     print " HTTP Queries completed in: {0}".format(
         pretty_time((end_time - start_time))
     )
             
+    # Cleanup
+    del p
+            
     # Sub all totals from array of result arrays
     # (This would be eliminated as a need if inter-process communication was implemented)
-    start_time = time.time()
     for thisdb in totals_array:
         totals = totals + np.array(thisdb)
-    end_time = time.time()
-    print " Totals collated in: {0}".format(
-        pretty_time((end_time - start_time))
-    )
-
-    totalsline = " {0:20} {1:<20}"
-    print " Database totals for account '{0}'".format(config['account'])
-    print totalsline.format("Number of databases:",config['dbcount'])
-    print totalsline.format("Total docs:",count_pretty(totals[0]))
-    print totalsline.format("Total deleted docs:",count_pretty(totals[1]))
-    print totalsline.format("Total active size:",data_size_pretty(totals[2]))
-    print totalsline.format("Total disk size:",data_size_pretty(totals[3]))
+    
+    print '_' * width
+    print "|{0:^20}|{1:^18} |".format("Cloudant Account:",config['account'])
+    print '-' * width
+    print totalsline.format("Number of databases",config['dbcount'])
+    print totalsline.format("Total docs",count_pretty(totals[0]))
+    print totalsline.format("Total deleted docs",count_pretty(totals[1]))
+    print totalsline.format("Total active size",data_size_pretty(totals[2]))
+    print totalsline.format("Total disk size",data_size_pretty(totals[3]))
+    print '-' * width
 
 def get_basic(db):
     myurl = 'https://{0}.cloudant.com/{1}'.format(config['account'],db)
