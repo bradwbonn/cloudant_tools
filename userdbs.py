@@ -7,25 +7,36 @@ import os
 import string
 import locale
 from multiprocessing import Pool
+import numpy as np
+import time
 
 config = dict(
     my_header = dict(),
     account = '',
-    dblen = 10,
-    width = 107-40,
-    results = dict()
+    results = dict(),
+    maxdbs = 40,
+    summary_only = False,
+    force_list = False,  
+    totals = dict(
+        shardcount = 0,
+        active = 0,
+        disk = 0,
+        doc_count = 0,
+        del_doc_count = 0,
+        nvalue = 0
+    )
 )
 
 def main(argv):
-    locale.setlocale(locale.LC_ALL, 'en_US')
-
     try:
-        opts, args = getopt.getopt(argv,"u:")
+        opts, args = getopt.getopt(argv,"u:f")
     except getopt.GetoptError:
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-u':
             config['account'] = arg
+        if opt == '-f':
+            config['force_list'] = True
 
     # Set authentication up        
     adminauthstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
@@ -37,86 +48,163 @@ def main(argv):
     config['my_header'] = {'Content-Type': 'application/json', 'Authorization': authstring}
     
     # Get list of databases for the account
-    dbs = get_all_dbs()
+    # dbs = get_all_dbs()
+    myurl = 'https://{0}.cloudant.com/_all_dbs'.format(config['account'])
+    dbs = http_request(myurl)
+    config['dbcount'] = len(dbs)
     
-    # Figure out the print format column width dynamically
+    # If the total number of databases is greater than 40, print a summary unless user forces
+    if (config['dbcount'] > config['maxdbs']) and not config['force_list']:
+        summary(dbs)
+    else:
+        detail_table(dbs)
+
+def detail_table(dbs):
+    # Figure out width of db name field
+    dblen = 10
     for db in dbs:
-        if len(db) > config['dblen']:
-            config['dblen'] = len(db)
-    config['width'] = config['width'] + config['dblen']
-    
-    print_headerline()
-    
-    # Spawn a thread for each CPU
-    # Each thread pulls and prints the stats of its passed database
-    p = Pool()
-    results_array = p.map(get_summary, dbs)
-
-    for result in results_array:
-        config['results'][result['db']] = dict(
-            shardcount = result['shardcount'],
-            nvalue = result['nvalue'],
-            active = result['active'],
-            disk = result['disk'],
-            doc_count = result['doc_count'],
-            del_doc_count = result['del_doc_count']
-        )
-    
-    print_db_details()
-    
-    print "-" * config['width']
-
-def print_headerline():
-    headerline = "|{0:^" + str(config['dblen']) + "}|{1:^4}|{2:^3}|{3:^10} |{4:^10} |{5:^14} |{6:^14} |"
-    print "_" * config['width']
-    print headerline.format(
-            'Database',
-            'Q',
-            'N',
-            'Active',
-            'Disk',
-            'Docs',
-            'Deleted'
-        )
-    print "-" * config['width']
-
-def print_db_details():
-    summaryline = "|{0:" + str(config['dblen']) + "}|{1:^4}|{2:^3}|{3:>10} |{4:>10} |{5:>14} |{6:>14} |"
-    for database in sorted(config['results']):
-        print summaryline.format(
-            database,
-            config['results'][database]['shardcount'],
-            config['results'][database]['nvalue'],
-            config['results'][database]['active'],
-            config['results'][database]['disk'],
-            config['results'][database]['doc_count'],
-            config['results'][database]['del_doc_count']
-        )
-
-def get_summary(db):
-    myurl = 'https://{0}.cloudant.com/{1}'.format(config['account'],db)
-    r = requests.get(
-        myurl,
-        headers = config['my_header']
+        if len(db) > dblen:
+            dblen = len(db)
+            
+    # Define formatting for table
+    headerformat = "|{0:^" + str(dblen) + "}|{1:^4}|{2:^3}|{3:^10}|{4:^11}|{5:^14} |{6:^14} |"
+    summaryline = "|{0:" + str(dblen) + "}|{1:^4}|{2:^3}|{3:>10}|{4:>11}|{5:>14} |{6:>14} |"    
+    headline = headerformat.format(
+        'Database',
+        'Q',
+        'N',
+        'Active',
+        'Disk',
+        'Docs',
+        'Deleted Docs'
     )
-    if r.status_code not in (200,201,202):
-        sys.exit("Failed, bad HTTP response")
-    stats = r.json()
-    if (stats['doc_count'] == 0):
-        print summaryline.format(db,'-','-',0,0,0,'-')
-        return
-    shards = get_shard_count(config['account'],db)
-    shardcount = len(shards)
-    nvalue = len(shards.itervalues().next())
-    doc_count = count_pretty(int(stats['doc_count']))
-    del_doc_count = count_pretty(int(stats['doc_del_count']))
-    disk = data_size_pretty(stats['sizes']['file'])
+    width = len(headline)
+    
+    # Open a multi-process pool with CPU count processes
+    p = Pool()
+    # Get details of each database
+    results_array = p.map(get_details, dbs)
+
+    # Begin printing table    
+    print "_" * width
+    
+    print headline
+    
+    print "-" * width    
+
+    # Print each database's details and add to totals
+    for result in results_array:
+        print summaryline.format(
+            result['db'],
+            result['shardcount'],
+            result['nvalue'],
+            data_size_pretty(result['active']),
+            data_size_pretty(result['disk']),
+            count_pretty(result['doc_count']),
+            count_pretty(result['del_doc_count'])
+        )
+        
+        for key, value in result.iteritems():
+            if key != 'db':
+                config['totals'][key] = config['totals'][key] + value
+      
+    print "-" * width
+    
+    print summaryline.format(
+        "Totals:",
+        config['totals']['shardcount'], 
+        'N/A',
+        data_size_pretty(config['totals']['active']),
+        data_size_pretty(config['totals']['disk']),
+        count_pretty(config['totals']['doc_count']),
+        count_pretty(config['totals']['del_doc_count'])
+    )
+    
+    print "-" * width
+
+def summary(dbs):
+    totals = np.array([0,0,0,0])
+    print " There are {0} databases in the account.".format(count_pretty(config['dbcount']))
+    print " Gathering stats to print a summary instead."
+    print " You can force full details with -f. Recommend piping to a file."
+    
+    # Open a multi-process pool with CPU count processes
+    p = Pool()
+    
+    # Estimate time required
+    sub_array = dbs[0:config['maxdbs']]
+    start_time = time.time()
+    discard = p.map(get_basic,sub_array)
+    end_time = time.time()
+    
+    del discard
+    est_time = pretty_time((end_time - start_time) * (config['dbcount'] / config['maxdbs']))
+    print " Estimated completion time: {0}\n".format(est_time)
+    
+    # Collect details when ready
+    ready = raw_input(" Continue? (Y/n) ")
+    if ready in ('n','N'):
+        sys.exit(" Aborting.")
+    
+    start_time = time.time()
+    totals_array = p.map(get_basic,dbs)
+    end_time = time.time()
+    print " HTTP Queries completed in: {0}".format(
+        pretty_time((end_time - start_time))
+    )
+            
+    # Sub all totals from array of result arrays
+    # (This would be eliminated as a need if inter-process communication was implemented)
+    start_time = time.time()
+    for thisdb in totals_array:
+        totals = totals + np.array(thisdb)
+    end_time = time.time()
+    print " Totals collated in: {0}".format(
+        pretty_time((end_time - start_time))
+    )
+
+    totalsline = " {0:20} {1:<20}"
+    print " Database totals for account '{0}'".format(config['account'])
+    print totalsline.format("Number of databases:",config['dbcount'])
+    print totalsline.format("Total docs:",count_pretty(totals[0]))
+    print totalsline.format("Total deleted docs:",count_pretty(totals[1]))
+    print totalsline.format("Total active size:",data_size_pretty(totals[2]))
+    print totalsline.format("Total disk size:",data_size_pretty(totals[3]))
+
+def get_basic(db):
+    myurl = 'https://{0}.cloudant.com/{1}'.format(config['account'],db)
+    stats = http_request(myurl)
     # Account for small or empty databases, where the API gets weird on disk space
     if stats['sizes']['active'] == None:
-        active = data_size_pretty(stats['sizes']['external'])
+        active = stats['sizes']['external']
     else:
-        active = data_size_pretty(stats['sizes']['active'])
-    #print summaryline.format(db,shardcount,nvalue,active,disk,doc_count,del_doc_count)
+        active = stats['sizes']['active']
+    return [
+        stats['doc_count'],
+        stats['doc_del_count'],
+        active,
+        stats['sizes']['file']
+    ]
+
+def get_details(db):
+    myurl = 'https://{0}.cloudant.com/{1}'.format(config['account'],db)
+    stats = http_request(myurl)
+
+    myurl = 'https://{0}.cloudant.com/{1}/_shards'.format(config['account'],db)
+    shards = http_request(myurl)['shards']
+    shardcount = len(shards)
+    
+    nvalue = len(shards.itervalues().next())
+    doc_count = int(stats['doc_count'])
+    del_doc_count = int(stats['doc_del_count'])
+    disk = stats['sizes']['file']
+    
+    # Account for small or empty databases, where the API gets weird on disk space
+    if stats['sizes']['active'] == None:
+        active = stats['sizes']['external']
+    else:
+        active = stats['sizes']['active']
+
     return dict(
         db = db,
         shardcount = shardcount,
@@ -126,28 +214,6 @@ def get_summary(db):
         doc_count = doc_count,
         del_doc_count = del_doc_count
     )
-    
-def get_shard_count(account, dbname):
-    myurl = 'https://{0}.cloudant.com/{1}/_shards'.format(account,dbname)
-    r = requests.get(
-        myurl,
-        headers = config['my_header']
-    )
-    if r.status_code not in (200,201,202):
-        sys.exit("Failed, bad HTTP response")
-    json_response = r.json()
-    return json_response['shards']
-
-def get_all_dbs():
-    myurl = 'https://{0}.cloudant.com/_all_dbs'.format(config['account'])
-    r = requests.get(
-        myurl,
-        headers = config['my_header']
-    )
-    if r.status_code not in (200,201,202):
-        sys.exit("Failed, bad HTTP response")
-    json_response = r.json()
-    return json_response
 
 def data_size_pretty(size):
     measure = 0
@@ -161,10 +227,33 @@ def data_size_pretty(size):
     formattedsize = "{:,}".format(size)
     return (formattedsize + codes[measure])
 
+def pretty_time(seconds):
+    seconds = float(seconds)
+    if seconds >= 3600:
+        time = round(seconds / 3600 , 1)
+        measure = ' hours'
+    elif seconds >= 60:
+        time = round(seconds / 60, 1)
+        measure = ' minutes'
+    else:
+        time = round(seconds, 2)
+        measure = ' seconds'
+    return (str(time)+measure)
+
 def count_pretty(count):
     return locale.format("%d", count, grouping=True)
     #return "{:,}".format(count)
+    
+def http_request(url):
+    r = requests.get(
+        url,
+        headers = config['my_header']
+    )
+    if r.status_code not in (200,201,202):
+        sys.exit("Failed, bad HTTP response")
+    return r.json()
 
 if __name__ == "__main__":
+    locale.setlocale(locale.LC_ALL, 'en_US')
     main(sys.argv[1:])
 
