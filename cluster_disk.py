@@ -10,6 +10,7 @@ import getopt
 import numpy
 import os
 from multiprocessing import Pool
+from pprint import pprint
 
 authstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
 my_header = {'Content-Type': 'application/json', 'Authorization': authstring}
@@ -35,11 +36,10 @@ def main(argv):
             config['cluster'] = arg
             
     nodes = get_node_list()
-    
+
     p = Pool()
-    results_array = p.map(get_disk_state_of_node, nodes)
-    #for node in nodes:
-    #    get_disk_state_of_node(node, account, cluster)
+    # Changed to map_async and added a 15-second timeout value. 
+    results_array = p.map_async(get_disk_state_of_node, nodes).get(15)
     
     for node_data in results_array:
         results[node_data[0]] = [
@@ -59,6 +59,8 @@ def get_node_list():
         myurl,
         headers = my_header
     )
+    if r.status_code not in (200,201,202):
+        sys.exit("Cannot obtain cluster node list. Check cluster name.")
     json_response = r.json()
     garbage1 = 'dbcore@db'
     garbage2 = '.' + config['cluster'] + '.cloudant.net'
@@ -71,6 +73,7 @@ def get_node_list():
     return(nodes)
     
 def get_disk_state_of_node(node):
+
     urlformat = 'https://{0}.cloudant.com/_api/v2/monitoring/node_disk_{1}_srv?cluster={2}&format=json&node=db{3}'
     myurl = urlformat.format(
         config['account'],
@@ -78,14 +81,16 @@ def get_disk_state_of_node(node):
         config['cluster'],
         node
     )
+
     r = requests.get(
         myurl,
         headers = my_header
     )
     if r.status_code not in (200,201,202):
         print r.status_code
-        sys.exit("Cannot query node stats: " + node)
+        sys.exit("Cannot query node stats for " + str(node))
     raw_json = r.json()
+
     disk_used = raw_json['target_responses'][0]['datapoints']
     myurl = urlformat.format(
         config['account'],
@@ -102,13 +107,18 @@ def get_disk_state_of_node(node):
         print r.status_code
         sys.exit("Cannot query node stats: " + node)
     raw_json = r.json()
+
     disk_free = raw_json['target_responses'][0]['datapoints']
     
     # Find earlist and latest valid data points in each set of results
+    # This behaves strangely if the API returns no timestamps.
     current_free = get_last_valid(disk_free)
     current_used = get_last_valid(disk_used)
     previous_free = get_first_valid(disk_free)
     previous_used = get_first_valid(disk_used)
+
+    if current_free == 0 or current_used == 0 or previous_free == 0 or previous_used == 0:
+        sys.exit("No valid statistics returned by API for db"+str(node))
 
     node_data = [
         node,
@@ -130,7 +140,11 @@ def get_last_valid(api_response):
             return valid
         else:
             pass
-        
+
+    # If below runs, we can't find any datapoints with timestamps.
+    print "No datapoints found!"
+    return 0
+
 def get_first_valid(api_response):
     valid = []
     last = len(api_response) - 1
@@ -140,10 +154,14 @@ def get_first_valid(api_response):
             return valid
         else:
             pass
+        
+    # If below runs, we can't find any datapoints with timestamps.
+    print "No datapoints found!"
+    return 0
 
 def print_results():
     print ""
-    print "Disk usage on the "+ str(len(results)) +" nodes of cluster: " + config['cluster']
+    print " Disk usage on the "+ str(len(results)) +" nodes of cluster: " + config['cluster']
     total_percent_change = 0
     total_disk_used = 0
     total_disk_free = 0
@@ -172,7 +190,7 @@ def print_results():
             plusornot = "-"
             percent_change = abs(percent_change)
             change = abs(change)
-        print 'db{0:<3}:{1:>10} ({2:4}%){3} Change:{4}{5:>10} ({6}{7:4}% in {8:1}min)'.format(
+        print ' db{0:<3}:{1:>10} ({2:4}%){3} Change:{4}{5:>10} ({6}{7:4}% in {8:1}min)'.format(
             key,
             data_size_pretty(disk_used),
             percent_full,
@@ -196,7 +214,7 @@ def print_results():
     else:
         plusornot = ' '
     print ""
-    print 'TOTAL:{0:>10} ({1:4}%)  Change:{2}{3:>10} ({4}{5:4}% in {6:1}min)'.format(
+    print ' TOTAL:{0:>10} ({1:4}%)  Change:{2}{3:>10} ({4}{5:4}% in {6:1}min)'.format(
         data_size_pretty(total_disk_used),
         total_percent_full,
         total_plusornot,
