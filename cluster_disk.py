@@ -11,6 +11,7 @@ import numpy
 import os
 from multiprocessing import Pool
 from pprint import pprint
+import argparse
 
 authstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
 my_header = {'Content-Type': 'application/json', 'Authorization': authstring}
@@ -23,23 +24,40 @@ results = dict()
 # Main
 def main(argv):
     # Check options for validity, print help if user fat-fingered anything
-    try:
-        opts, args = getopt.getopt(argv,"u:c:")
-    except getopt.GetoptError:
-        print "type better."
-        sys.exit(2)
-        
-    for opt, arg in opts:
-        if opt == '-u':
-            config['account'] = arg
-        elif opt in ("-c"):
-            config['cluster'] = arg
-            
+    #try:
+    #    opts, args = getopt.getopt(argv,"u:c:")
+    #except getopt.GetoptError:
+    #    print "type better."
+    #    sys.exit(2)
+    #    
+    #for opt, arg in opts:
+    #    if opt == '-u':
+    #        config['account'] = arg
+    #    elif opt in ("-c"):
+    #        config['cluster'] = arg
+    argparser = argparse.ArgumentParser(description = 'Get status of disks in a Cloudant DBaaS cluster')
+    argparser.add_argument(
+        'clustername',
+        type=str,
+        help='Cloudant DBaaS cluster name (https://<clustername>.cloudant.com)'
+        )
+    argparser.add_argument(
+        '-u',
+        help = 'Account name to use',
+        type=str,
+        nargs = '?',
+        default = 'cloudant',
+        metavar = 'username'
+        )
+    myargs = argparser.parse_args()
+    
+    config['account'] = myargs.u
+    config['cluster'] = myargs.clustername
     nodes = get_node_list()
 
     p = Pool()
-    # Changed to map_async and added a 15-second timeout value. 
-    results_array = p.map_async(get_disk_state_of_node, nodes).get(15)
+    # Changed to map_async and added a 30-second timeout value. 
+    results_array = p.map_async(get_disk_state_of_node, nodes).get(30)
     
     for node_data in results_array:
         results[node_data[0]] = [

@@ -25,14 +25,7 @@
  # For total # of conflicts in the database:
  #   -x
 
-import requests
-import json
-import re
-import sys
-import getopt
-import os
-import string
-import time
+import time, argparse, string, os, sys, re, json, requests
 
 config = dict(
     cluster = '',
@@ -41,7 +34,6 @@ config = dict(
     db_size = 0,
     my_header = dict(),
     shards = dict(),
-    helpstring = "Usage: dbinfo.py -u <user> -d <database> [-s [-k]] [-i] [-x]",
     doc_count = 0,
     batch = 10000, # Number of docs returned in each GET query for the conflict scan
     time_estimate_ratio = (4 * 60.0) / 144250.0, # estimated number of seconds per doc based on 4kb doc size
@@ -54,29 +46,45 @@ config = dict(
 
 # Main
 def main(argv):
-    # Default to only printing summary info
-    print_shards = False
-    print_conflicts = False
-    print_indexes = False
-    try:
-        opts, args = getopt.getopt(argv,"u:d:sixv")
-    except getopt.GetoptError:
-        print config['helpstring']
-        sys.exit(2)
-        
-    for opt, arg in opts:
-        if opt == '-u':
-            config['account'] = arg
-        elif opt in ("-d"):
-            config['dbname'] = arg
-        elif opt in ("-s"):
-            print_shards = True
-        elif opt in ("-x"):
-            print_conflicts = True
-        elif opt in ("-i"):
-            print_indexes = True
-        elif opt in ("-v"):
-            config['verbose'] = True
+    
+    argparser = argparse.ArgumentParser(description = 'Get helpful information about a database inside Cloudant DBaaS')
+    argparser.add_argument(
+        'account',
+        type=str,
+        help='Cloudant account name (https://<account>.cloudant.com)'
+    )
+    argparser.add_argument(
+        'database',
+        type=str,
+        help='Cloudant database name'
+    )
+    argparser.add_argument(
+        '-s',
+        action='store_true',
+        help='Display shard information for database'
+    )
+    argparser.add_argument(
+        '-x',
+        action='store_true',
+        help = 'Check DB for conflicts (slow)'
+    )
+    argparser.add_argument(
+        '-i',
+        action='store_true',
+        help = 'Display index information'
+    )
+    argparser.add_argument(
+        '-v',
+        action='store_true',
+        help = 'Be verbose'
+    )
+    myargs = argparser.parse_args()
+    config['account'] = myargs.account
+    config['dbname'] = myargs.database
+    print_shards = myargs.s
+    print_conflicts = myargs.x
+    print_indexes = myargs.i
+    config['verbose'] = myargs.v
     
     # Set authentication up        
     adminauthstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
@@ -407,7 +415,10 @@ def print_shard_map(nodes, shards):
     for shardrange,nodes in shards.iteritems():
         for longnode in nodes:
             node = strip_nodename(longnode)
-            distribution[node].append(shardrange[:trim])
+            try:
+                distribution[node].append(shardrange[:trim])
+            except:
+                sys.exit(" ERROR: Node status unavailable: db{0}".format(node))
     for node in sorted(distribution):
         shardlist = ','.join(sorted(distribution[node]))
         lines_to_print.append([node, shardlist, len(distribution[node])])

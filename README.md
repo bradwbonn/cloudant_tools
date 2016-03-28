@@ -13,10 +13,7 @@
 * Uses auth strings from environment variables
   * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` (only needed for shard details)
   * `CLOUDANT_AUTH='Basic: <authstring>'`
-* How to use: `dbinfo.py -u <user> -d <database> [-s] [-i] [-x] [-v]`
-  * Always Mandatory Parameters:
-    * `-u <Cloudant username>`
-    * `-d <Cloudant database>`
+* How to use: `dbinfo.py <account> <database> [-s] [-i] [-x] [-v]`
   * Optional parameters:
     * `-s` Outputs a map of shard distributions on cluster nodes 
     * `-i` Prints a list of indexes and their associated sizes:
@@ -25,7 +22,7 @@
   
 ## userdbs.py
 * Lists all databases in the specified Cloudant account and their basic statistics in an easy-to-read format
-* `userdbs.py -u <cloudant account>`
+* `userdbs.py <cloudant account>`
 * Uses auth strings from environment variables
   * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` or
   * `CLOUDANT_AUTH='Basic: <authstring>'`
@@ -33,7 +30,7 @@
 ## cluster_disk.py
 * Admin tool that gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
 * Requires cluster admin rights
-* `python cluster_disk.py -u <cloudant user> -c <cloudant cluster>`
+* `python cluster_disk.py <cloudant cluster>`
 * Uses auth string stored in environment variable
   * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'`
 

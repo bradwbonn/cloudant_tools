@@ -2,7 +2,7 @@
 import requests
 import json
 import sys
-import getopt
+import argparse
 import os
 import string
 import locale
@@ -27,15 +27,21 @@ config = dict(
 )
 
 def main(argv):
-    try:
-        opts, args = getopt.getopt(argv,"u:f")
-    except getopt.GetoptError:
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-u':
-            config['account'] = arg
-        if opt == '-f':
-            config['force_list'] = True
+    
+    argparser = argparse.ArgumentParser(description = '')
+    argparser.add_argument(
+        'account',
+        type=str,
+        help='Cloudant DBaaS account name (https://<account>.cloudant.com)'
+        )
+    argparser.add_argument(
+        '-f',
+        help = 'Force list of databases, even if there are over {0}'.format(config['maxdbs']),
+        action = 'store_true'
+        )
+    myargs = argparser.parse_args()
+    config['account'] = myargs.account
+    config['force_list'] = myargs.f
 
     # Set authentication up        
     adminauthstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
