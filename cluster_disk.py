@@ -49,6 +49,14 @@ def main(argv):
         default = 'cloudant',
         metavar = 'username'
         )
+    argparser.add_argument(
+        '-t',
+        help = 'Time to wait for all nodes to return disk status',
+        type=int,
+        nargs = '?',
+        default = 30,
+        metavar = 'seconds'
+    )
     myargs = argparser.parse_args()
     
     config['account'] = myargs.u
@@ -57,7 +65,7 @@ def main(argv):
 
     p = Pool()
     # Changed to map_async and added a 30-second timeout value. 
-    results_array = p.map_async(get_disk_state_of_node, nodes).get(30)
+    results_array = p.map_async(get_disk_state_of_node, nodes).get(myargs.t)
     
     for node_data in results_array:
         results[node_data[0]] = [
