@@ -23,18 +23,6 @@ results = dict()
 
 # Main
 def main(argv):
-    # Check options for validity, print help if user fat-fingered anything
-    #try:
-    #    opts, args = getopt.getopt(argv,"u:c:")
-    #except getopt.GetoptError:
-    #    print "type better."
-    #    sys.exit(2)
-    #    
-    #for opt, arg in opts:
-    #    if opt == '-u':
-    #        config['account'] = arg
-    #    elif opt in ("-c"):
-    #        config['cluster'] = arg
     argparser = argparse.ArgumentParser(description = 'Get status of disks in a Cloudant DBaaS cluster')
     argparser.add_argument(
         'clustername',
@@ -65,7 +53,10 @@ def main(argv):
 
     p = Pool()
     # Changed to map_async and added a 30-second timeout value. 
-    results_array = p.map_async(get_disk_state_of_node, nodes).get(myargs.t)
+    try:
+        results_array = p.map_async(get_disk_state_of_node, nodes).get(myargs.t)
+    except:
+        sys.exit("Timeout. Increase wait time beyond {0} seconds or check cluster status.".format(myargs.t))
     
     for node_data in results_array:
         results[node_data[0]] = [
