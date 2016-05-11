@@ -10,13 +10,11 @@ import getopt
 import numpy
 import os
 from multiprocessing import Pool
-from pprint import pprint
 import argparse
 
 authstring = os.environ.get('CLOUDANT_ADMIN_AUTH')
 my_header = {'Content-Type': 'application/json', 'Authorization': authstring}
 config = dict(
-    account = '',
     cluster = ''
 )
 results = dict()
@@ -25,17 +23,9 @@ results = dict()
 def main(argv):
     argparser = argparse.ArgumentParser(description = 'Get status of disks in a Cloudant DBaaS cluster')
     argparser.add_argument(
-        'clustername',
+        'name',
         type=str,
-        help='Cloudant DBaaS cluster name (https://<clustername>.cloudant.com)'
-        )
-    argparser.add_argument(
-        '-u',
-        help = 'Account name to use',
-        type=str,
-        nargs = '?',
-        default = 'cloudant',
-        metavar = 'username'
+        help='Cloudant DBaaS cluster or account name (e.g. https://username.cloudant.com)'
         )
     argparser.add_argument(
         '-t',
@@ -47,16 +37,14 @@ def main(argv):
     )
     myargs = argparser.parse_args()
     
-    config['account'] = myargs.u
-    config['cluster'] = myargs.clustername
-    nodes = get_node_list()
+    nodes = get_node_list(myargs.name)
 
     p = Pool()
     # Changed to map_async and added a 30-second timeout value. 
     try:
         results_array = p.map_async(get_disk_state_of_node, nodes).get(myargs.t)
-    except:
-        sys.exit("Timeout. Increase wait time beyond {0} seconds or check cluster status.".format(myargs.t))
+    except Exception as e:
+        sys.exit("Timeout. Increase wait time beyond {0} seconds or check cluster status: {1}".format(myargs.t, e))
     
     for node_data in results_array:
         results[node_data[0]] = [
@@ -69,31 +57,34 @@ def main(argv):
         
     print_results()
 
-def get_node_list():
+def get_node_list(name):
     nodes = []
-    myurl = 'https://' + config['cluster'] + '.cloudant.com/_membership'
+    myurl = 'https://' + name + '.cloudant.com/_membership'
     r = requests.get(
         myurl,
         headers = my_header
     )
     if r.status_code not in (200,201,202):
-        sys.exit("Cannot obtain cluster node list. Check cluster name.")
+        sys.exit("Cannot obtain cluster node list. Check cluster or account name.")
     json_response = r.json()
-    garbage1 = 'dbcore@db'
-    garbage2 = '.' + config['cluster'] + '.cloudant.net'
     for nodestring in json_response['cluster_nodes']:
         # regex out the node name
-        without_tail = re.sub(garbage2,'',nodestring)
-        nodename = re.sub(garbage1,'',without_tail)
+        m = re.search('dbcore@db([0-9]+?)\.([a-z,A-Z,0-9]+[0-9]{3})\.cloudant\.net', nodestring)
+        if m:
+            nodenumber = m.group(1)
+            if (config['cluster'] == ''):
+                config['cluster'] = m.group(2)
+        else:
+            sys.exit("Cannot obtain cluster node list. Check cluster or account name.")
         # add it to the list
-        nodes.append(int(nodename))
+        nodes.append(int(nodenumber))
     return(nodes)
     
 def get_disk_state_of_node(node):
 
     urlformat = 'https://{0}.cloudant.com/_api/v2/monitoring/node_disk_{1}_srv?cluster={2}&format=json&node=db{3}'
     myurl = urlformat.format(
-        config['account'],
+        'cloudant',
         'use',
         config['cluster'],
         node
@@ -110,7 +101,7 @@ def get_disk_state_of_node(node):
 
     disk_used = raw_json['target_responses'][0]['datapoints']
     myurl = urlformat.format(
-        config['account'],
+        'cloudant',
         'free',
         config['cluster'],
         node
