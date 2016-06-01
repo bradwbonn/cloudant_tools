@@ -1,4 +1,9 @@
 # Some helpful Cloudant tools I've written
+
+#### Almost all of these scripts use auth strings from the following environment variables
+* `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` (only needed for cluster-level details)
+* `CLOUDANT_AUTH='Basic: <authstring>'`
+
 ## dbinfo.py
 * Useful tool that can be used to obtain a large quantity of useful information about a Cloudant database
 * Available data points include
@@ -10,9 +15,6 @@
   * Overhead from deleted document tombstones - (experimental)
   * Deleted document count
   * A count of all document conflicts in the database - (very slow, use with caution)
-* Uses auth strings from environment variables
-  * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` (only needed for shard details)
-  * `CLOUDANT_AUTH='Basic: <authstring>'`
 * Usage: `dbinfo.py <account> <database> [-s] [-i] [-x] [-v]`
   * Optional parameters:
     * `-s` Outputs a map of shard distributions on cluster nodes 
@@ -23,9 +25,6 @@
 ## userdbs.py
 * Lists all databases in the specified Cloudant account and their basic statistics in an easy-to-read format
 * Usage: `userdbs.py <cloudant account>`
-* Uses auth strings from environment variables
-  * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` or
-  * `CLOUDANT_AUTH='Basic: <authstring>'`
 
 ## tasks.py
 * Summarizes state of _active_tasks endpoint, giving an easy-to-read state of replication, indexing and compaction
@@ -37,8 +36,6 @@
 * Admin tool that gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
 * Requires cluster admin rights
 * `python cluster_disk.py <cloudant cluster>`
-* Uses auth string stored in environment variable
-  * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'`
   
 ## replicate_all.py
 * Replicates all databases from one account to another
