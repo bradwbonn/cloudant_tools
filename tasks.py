@@ -40,7 +40,40 @@ class CloudantActiveTasks(object):
             view_compaction = 0,
             database_compaction = 0,
         )
+        self.grouped_tasks = dict(
+            replication = dict(),
+            indexer = dict(),
+            search_indexer = dict(),
+            view_compaction = dict(),
+            database_compaction = dict()
+            )
         
+    def get_new(self): # unfinished
+        for task in self.tasks_raw:
+            thistype = task['type']
+            if thistype == 'indexer':
+                shards,shard_range,username,database_and_time = task['database'].split('/')
+                ddoc = task['design_document'].split('/')[1]
+                pending = task['total_changes'] - task['changes_done']
+                self.append_task(
+                    [
+                        thistype,
+                        database_and_time.split('.')[0],
+                        ddoc,
+                        shard_range,
+                        pending
+                    ]
+                )
+            elif thistype == 'search_indexer':
+                pass
+            elif thistype == 'replication':
+                pass
+            elif thistype == 'view_compaction':
+                pass
+            elif thistype == 'database_compaction':
+                pass
+            
+    
     def get(self):
         myurl = 'https://{0}.cloudant.com/_active_tasks'.format(self.account)
         self.tasks_raw = self.json_get(myurl)
