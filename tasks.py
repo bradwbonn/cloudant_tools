@@ -48,21 +48,43 @@ class CloudantActiveTasks(object):
         for task in self.tasks_raw:
             if task['type'] == 'replication':
                 pending = task['changes_pending']
-            else:    
+                if task['continuous']:
+                    cont = 'Continuous'
+                else:
+                    cont = 'One-time'
+                if self.detail:
+                    print " {0} replication: {1}\n   Pending: {2}".format(
+                        cont,
+                        task['replication_id'],
+                        pending
+                    )
+            elif 'indexer' in task['type']:    
+                shards,shard_range,username,database_and_time = task['database'].split('/')
+                ddoc = task['design_document'].split('/')[1]
+                pending = task['total_changes'] - task['changes_done']
+                if self.detail:
+                    print " {0} {1} {2} {3} {4}%".format(
+                        database_and_time.split('.')[0],
+                        shard_range[:4],
+                        task['type'],
+                        ddoc,
+                        task['progress']
+                    )
+            else:
                 shards,shard_range,username,database_and_time = task['database'].split('/')
                 pending = task['total_changes'] - task['changes_done']
                 if self.detail:
                     print " {0} {1} {2} Pending: {3}".format(
                         database_and_time.split('.')[0],
-                        shard_range,
+                        shard_range[:4],
                         task['type'],
                         pending
                     )
+            
             self.types[task['type']] = self.types[task['type']] + pending
         print " Total changes left:"
         for summary in self.types.keys():
-            if self.types[summary] > 0:
-                print " {0}: {1}".format(summary, self.types[summary])
+            print " {0}: {1}".format(summary, self.types[summary])
     
     def json_get(self, url):
         r = requests.get(
