@@ -27,6 +27,12 @@
   * `CLOUDANT_ADMIN_AUTH='Basic: <authstring>'` or
   * `CLOUDANT_AUTH='Basic: <authstring>'`
 
+## tasks.py
+* Summarizes state of _active_tasks endpoint, giving an easy-to-read state of replication, indexing and compaction
+* Usage: `tasks.py [-d] <account>`
+  * Optional parameters:
+    * `-d` Show detailed information about every task
+
 ## cluster_disk.py
 * Admin tool that gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
 * Requires cluster admin rights
