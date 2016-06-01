@@ -48,10 +48,13 @@ class CloudantActiveTasks(object):
         for task in self.tasks_raw:
             if task['type'] == 'replication':
                 pending = task['changes_pending']
-            else:
+            else:    
+                shards,shard_range,username,database_and_time = task['database'].split('/')
                 pending = task['total_changes'] - task['changes_done']
                 if self.detail:
-                    print " Type: {0} - Pending changes: {1}".format(
+                    print " {0} {1} {2} Pending: {3}".format(
+                        database_and_time.split('.')[0],
+                        shard_range,
                         task['type'],
                         pending
                     )
