@@ -1,5 +1,5 @@
 *.json
 *.csv
 xferrk.sh
-
+venv
 *.sh
