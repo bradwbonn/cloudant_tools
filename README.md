@@ -35,13 +35,13 @@
 ## cluster_disk.py
 * Admin tool that gives back the current disk usage on each node in a cluster, along with the change over the past 4 minutes
 * Requires cluster admin rights
-* `python cluster_disk.py <cloudant cluster>`
+* Usage: `python cluster_disk.py <cloudant cluster>`
   
 ## replicate_all.py
 * Replicates all databases from one account to another
 * Helpful for duplicating an entire account's content to a test account, or for setting up a continuous replication task for a hot mirror.
 * Only replicates one direction.  Bi-direction replication can be implemented by running the command again with source and destination reversed.
-* Usage: `cluster_disk.py [-t] [-c] [-e] <source> <destination>`
+* Usage: `replicate_all.py [-t] [-c] [-e] <source> <destination>`
 	* Optional parameters:
 		* `-c` Make replication tasks continuous
 		* `-e` Only replicate existing databases on target
